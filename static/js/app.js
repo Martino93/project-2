@@ -12,7 +12,7 @@ chartWidth = svgWidth - (chartMargin.left + chartMargin.right);
 chartHeight = svgHeight - (chartMargin.top + chartMargin.bottom);
 
 var svg = d3
-    .select("#bar")
+    .select("#scatter")
     .append("svg")
     .attr("height", svgHeight)
     .attr("width", svgWidth);
@@ -20,35 +20,40 @@ var svg = d3
 var chartGroup = svg.append("g")
     .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
 
-//loading data
 
 
-d3.csv("csv_files/demo_nutrition.csv").then(function(data){
+d3.csv("../../csv_files/demo_nutrition_clean.csv").then(function(data){
     console.log(data);
-    d3.mean(data, function(d){
-        return lst = [d.DR1TPROT, d.DR1TCARB, d.DR1TSUGR];
-    })
-    console.log(lst)
-    console.log(data.keys)
-    
-    data.forEach(function(data){
-        data.DR1TPROT = +data.DR1TPROT;
-        data.DR1TCARB = +data.DR1TCARB;
-        data.DR1TSUGR = +data.DR1TSUGR;
-        data.DR1TFIBE = +data.DR1TFIBE;
-        data.DR1TTFAT = +data.DR1TTFAT;
+    data.forEach(function(d){
+        d.RIDAGEYR = +d.RIDAGEYR,
+        d.DR1TKCAL = +d.DR1TKCAL
     })
 
-// scaling axes
-var xScale = d3.scaleLinear()
-    .domain([83500, 93000])
-    .range([0, chartWidth]) 
+    var personID = d3.map(data, function(d){
+        return (d.SEQN)
+    }).keys()
+    // console.log(personID)
 
-var yScale = d3.scaleLinear()
-    .domain([5, d3.max(data, data=>data.DR1TCARB)])
-    .range([chartHeight, 0])
+    d3.select("#selDataSet")
+        .selectAll("myOptions")
+        .data(personID)
+        .enter()
+        .append('option')
+        .text(d => d)
+        .attr("value", d => d)
 
-// creating axes
+    var myColor = d3.scaleOrdinal()
+        .domain(personID)
+        .range(d3.schemeSet2)
+
+    var xScale = d3.scaleLinear()
+        .domain([10,80])
+        .range([0,chartWidth])
+
+    var yScale = d3.scaleLinear()
+        .domain([0, d3.max(data, data => data.DR1TKCAL)])
+        .range([chartHeight, 0])
+
 var xAxis = d3.axisBottom(xScale);
 var yAxis = d3.axisLeft(yScale);
 
@@ -58,70 +63,24 @@ chartGroup.append("g")
 
 chartGroup.append("g")
     .classed("axis", true)
-    .attr("transform", "translate(0, " + chartHeight + ")")
+    .attr("transform", "translate(0, "+ chartHeight + ")")
     .call(xAxis);
 
-// circles
 chartGroup.append("g")
     .selectAll("circle")
     .data(data)
     .enter()
     .append("circle")
-        // .attr("cx", function(d){return xAxis(d.age);})
-        // .attr("cy", function(d){return yAxis(d.DR1TKCAL);})
-        // .attr("r", 2)
-        // .style("fill", function(d){return color(d.state);})
-        .attr('cx', d => xScale(+d.SEQN))
-        .attr('cy', d => yScale(+d.DR1TKCAL))
-        .attr('r', 5)
-        .attr("stroke", "black")
-        .style("fill" , "#69b3a2")
-        
-// data text
-chartGroup.append("g")
-    .selectAll("text")
-    .data(data)
-    .enter()
-    .append("text")
-    .text(d => d.abbr)
-    .attr("x", d => xScale(+d.SEQN))
-    .attr("y", d => yScale(+d.DR1TKCAL)+3)
-    .attr("font_family", "sans-serif")
-    .attr("font-size", "7px")
-    .attr("fill", "white")
-    .style("text-anchor", "middle")
-    .style("font-weight", "bold")
-
-// axes labels
-svg.append("text")
-    .attr("transform", "translate(" + (chartWidth/2) +" ,"+ (chartHeight + chartMargin.top + 40) + ")")
-    .style("text-anchor", "middle")
-    .text("SEQN")
-
-svg.append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("y", -90 - chartMargin.left)
-    .attr("x",0 - (chartHeight / 2)-50)
-    .attr("dy", "10em")
-    .style("text-anchor", "middle")
-    .text("% of population that smokes");  
-
-
-
-
-// function xGridLines(){
-//     return d3.axisBottom(xScale).ticks(10)
-// }
-
-// chartGroup.append("g")
-//     .attr("class", "grid")
-//     .attr("transform", "translate(0," + chartHeight + ")")
-//     .call(xGridLines()
-//         .tickSize(-chartHeight))
-//         .tickFormat(" ")
-
+    .filter(function(d){
+        return ((d.DR1TKCAL + d.DR2TKCAL) / 2) >5 ;
+    })
+    .filter(function(d){
+        return d.RIDAGEYR>=18 && d.RIDAGEYR < 80;
+    })
+    .attr('cx', d => xScale(+d.RIDAGEYR))
+    .attr('cy', d => yScale(+d.DR1TKCAL))
+    .attr('r',2)
+    .attr('stroke','black')
+    .style('fill','#69b3a2')
 });
-
-
-// https://www.youtube.com/watch?v=2S1AbEWX85o
 

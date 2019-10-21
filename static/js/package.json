@@ -1,0 +1,15 @@
+{
+  "name": "js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js",
+    "fulltable": "node fullTable.js"
+  },
+  "author": "mohamed",
+  "license": "ISC",
+  "dependencies": {
+    "pg": "^7.12.1"
+  }
+}

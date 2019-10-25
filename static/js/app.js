@@ -26,7 +26,8 @@ d3.csv("../../csv_files/demo_nutrition_clean.csv").then(function(data){
     console.log(data);
     data.forEach(function(d){
         d.RIDAGEYR = +d.RIDAGEYR,
-        d.DR1TKCAL = +d.DR1TKCAL
+        d.DR1TKCAL = +d.DR1TKCAL,
+        d.DR1TCARB = +d.DR1TCARB
     })
 
     var personID = d3.map(data, function(d){
@@ -82,5 +83,89 @@ chartGroup.append("g")
     .attr('r',2)
     .attr('stroke','black')
     .style('fill','#69b3a2')
+
 });
+
+
+//////////////////// BARCHART ATTEMPT ////////////////////
+var svgWidth = 960;
+var svgHeight = 660;
+var chartMargin = {
+    top: 30,
+    right: 30,
+    bottom: 30,
+    left: 30
+  };
+
+// Define dimensions of the chart area
+var chartWidth = svgWidth - chartMargin.left - chartMargin.right;
+var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
+
+// Select body, append SVG area to it, and set the dimensions
+var svg = d3
+  .select("#gauge")
+  .append("svg")
+  .attr("height", svgHeight)
+  .attr("width", svgWidth);
+
+var chartGroup = svg.append("g")
+.attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
+
+
+d3.csv("../../csv_files/test.csv").then(function(data){
+    var firstPerson = data[0]
+    var header = d3.keys(firstPerson)
+    var vals = d3.values(firstPerson)
+    // var protein = firstPerson.DR1TPROT;
+    // var carb = firstPerson.DR1TCARB;
+    // var fat = firstPerson.DR1TTFAT;
+    // console.log(firstPerson.SEQN);
+    // console.log(header)
+    // console.log(vals)
+
+    var results = {};
+    header.forEach((key, i) => results[key] = vals[i]);
+    console.log(results)
+    // console.log(protein);
+    // console.log(carb);
+    // console.log(fat);
+    var barSpacing = 10; // desired space between each bar
+    var scaleY = 5; // 10x scale on rect height
+
+    // Create a 'barWidth' variable so that the bar chart spans the entire chartWidth.
+    var barWidth = (chartWidth - (barSpacing*(data.length - 1)))/data.length;
+
+    chartGroup.selectAll(".bar")
+    .data(data)
+    .enter()
+    .append('rect')
+    .classed("bar", true)
+    .attr('x', (d, i) => i * (barWidth + barSpacing))
+    .attr("width", d => barWidth)
+    .attr('y', d => chartHeight - d.DR1TKCAL)
+    .attr("height", d => d.DR1TKCAL * scaleY)
+
+    var xScale = d3.scaleLinear()
+    .domain([10,80])
+    .range([0,chartWidth])
+
+    var yScale = d3.scaleLinear()
+        .domain([0, d3.max(data, data => data.DR1TKCAL)])
+        .range([chartHeight, 0])
+
+    var xAxis = d3.axisBottom(xScale);
+    var yAxis = d3.axisLeft(yScale);
+
+    chartGroup.append("g")
+    .classed("axis", true)
+    .call(yAxis);
+
+    chartGroup.append("g")
+    .classed("axis", true)
+    .attr("transform", "translate(0, "+ chartHeight + ")")
+    .call(xAxis);
+
+
+    });
+
 
